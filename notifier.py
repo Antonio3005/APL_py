@@ -140,13 +140,19 @@ def send_notify():
         data = get_flights(iata_from,iata_to,f[4],date_to,f[5],return_to,price_min,f[6])
         #logging.error(f"voli: {data}")
         if data is not None:
-            for d in data['data']:
-                d['user'] = f[1]
-                logging.error(f"Valore di data: {type(d)}")
+            logging.error(data['data'])
+            if data['data'] == []:
+                data['user']=f[1]
+                check_flights(data)
+                logging.error("sono qui")
+            else :
+                for d in data['data']:
+                    d['user'] = f[1]
+                    logging.error(f"Valore di data: {type(d)}")
 
                 #serialized_data = d.decode('utf-8')
 
-                check_flights(d)
+                    check_flights(d)
 
 
 
@@ -163,60 +169,65 @@ def formatta_date(d):
 
 def check_flights(flight_data):
     try:
-        logging.error(f"process_flight_dats : {flight_data}")
-        max_price = float(flight_data['price'])  # Converti il prezzo in un numero a virgola mobile
-        logging.error(max_price)
-        conn = engine.connect()
-        query = fav.select().where(
-            (fav.c.user == flight_data['user']) &
-            (fav.c.city_from == flight_data['route'][0]['cityFrom']) &
-            (fav.c.city_to == flight_data['route'][0]['cityTo']) &
-            (fav.c.date_from == formatta_date(flight_data['route'][0]['local_departure'])) &
-            (fav.c.return_from == formatta_date(flight_data['route'][1]['local_departure']))
-        )
-        result = conn.execute(query)
-        favs = result.fetchall()
-
-        logging.error(f"{favs}")
-
-        if favs:
-            for f in favs:
-                if float(f.price) > max_price:
-                    logging.error(f"Prezzo {f.price} maggiore o uguale a {max_price}")
-                    body = (f"Ci sono nuove offerte di volo disponibili per le tue richieste: \n"
-                            "Andata:\n"
-                            f"Citta di partenza {flight_data['route'][0]['cityFrom']}\n"
-                            f"Aeroporto di partenza {flight_data['route'][0]['flyFrom']}\n"
-                            f"Aeroporto di arrivo {flight_data['route'][0]['flyTo']}\n"
-                            f"Citta di arrivo {flight_data['route'][0]['cityTo']}\n"
-                            f"Data di partenza {flight_data['route'][0]['local_departure']}\n"
-                            "Ritorno:\n"
-                            f"Citta di partenza {flight_data['route'][1]['cityFrom']}\n"
-                            f"Aeroporto di partenza {flight_data['route'][1]['flyFrom']}\n"
-                            f"Aeroporto di arrivo {flight_data['route'][1]['flyTo']}\n"
-                            f"Citta di arrivo {flight_data['route'][1]['cityTo']}\n"
-                            f"Data di ritorno {flight_data['route'][1]['local_departure']}\n"
-                            f"Prezzo {flight_data['price']}\n")
-                else:
-                    logging.error("Per oggi niente offerte")
-                    logging.error(f"Volo al prezzo di {max_price}")
-                    body = (f"Per oggi niente offerte")
+        if(flight_data['data']==[]):
+            body = (f"Per oggi niente offerte")
 
         else:
-            body = (f"Ci sono nuove offerte di volo disponibili per le tue richieste: \n"
-                    "Andata:\n"
-                    f"Citta di partenza {flight_data['route'][0]['cityFrom']}\n"
-                    f"Aeroporto di partenza {flight_data['route'][0]['flyFrom']}\n"
-                    f"Aeroporto di arrivo {flight_data['route'][0]['flyTo']}\n"
-                    f"Citta di arrivo {flight_data['route'][0]['cityTo']}\n"
-                    f"Data di partenza {flight_data['route'][0]['local_departure']}\n"
-                    "Ritorno:\n"
-                    f"Citta di partenza {flight_data['route'][1]['cityFrom']}\n"
-                    f"Aeroporto di partenza {flight_data['route'][1]['flyFrom']}\n"
-                    f"Aeroporto di arrivo {flight_data['route'][1]['flyTo']}\n"
-                    f"Citta di arrivo {flight_data['route'][1]['cityTo']}\n"
-                    f"Data di ritorno {flight_data['route'][1]['local_departure']}\n"
-                    f"Prezzo {flight_data['price']}\n")
+
+            logging.error(f"process_flight_dats : {flight_data}")
+            max_price = float(flight_data['price'])  # Converti il prezzo in un numero a virgola mobile
+            logging.error(max_price)
+            conn = engine.connect()
+            query = fav.select().where(
+                (fav.c.user == flight_data['user']) &
+                (fav.c.city_from == flight_data['route'][0]['cityFrom']) &
+                (fav.c.city_to == flight_data['route'][0]['cityTo']) &
+                (fav.c.date_from == formatta_date(flight_data['route'][0]['local_departure'])) &
+                (fav.c.return_from == formatta_date(flight_data['route'][1]['local_departure']))
+            )
+            result = conn.execute(query)
+            favs = result.fetchall()
+
+            logging.error(f"{favs}")
+
+            if favs:
+                for f in favs:
+                    if float(f.price) > max_price:
+                        logging.error(f"Prezzo {f.price} maggiore o uguale a {max_price}")
+                        body = (f"Ci sono nuove offerte di volo disponibili per le tue richieste: \n"
+                                "Andata:\n"
+                                f"Citta di partenza {flight_data['route'][0]['cityFrom']}\n"
+                                f"Aeroporto di partenza {flight_data['route'][0]['flyFrom']}\n"
+                                f"Aeroporto di arrivo {flight_data['route'][0]['flyTo']}\n"
+                                f"Citta di arrivo {flight_data['route'][0]['cityTo']}\n"
+                                f"Data di partenza {flight_data['route'][0]['local_departure']}\n"
+                                "Ritorno:\n"
+                                f"Citta di partenza {flight_data['route'][1]['cityFrom']}\n"
+                                f"Aeroporto di partenza {flight_data['route'][1]['flyFrom']}\n"
+                                f"Aeroporto di arrivo {flight_data['route'][1]['flyTo']}\n"
+                                f"Citta di arrivo {flight_data['route'][1]['cityTo']}\n"
+                                f"Data di ritorno {flight_data['route'][1]['local_departure']}\n"
+                                f"Prezzo {flight_data['price']}\n")
+                    else:
+                        logging.error("Per oggi niente offerte")
+                        logging.error(f"Volo al prezzo di {max_price}")
+                        body = (f"Per oggi niente offerte")
+
+            else:
+                body = (f"Ci sono nuove offerte di volo disponibili per le tue richieste: \n"
+                        "Andata:\n"
+                        f"Citta di partenza {flight_data['route'][0]['cityFrom']}\n"
+                        f"Aeroporto di partenza {flight_data['route'][0]['flyFrom']}\n"
+                        f"Aeroporto di arrivo {flight_data['route'][0]['flyTo']}\n"
+                        f"Citta di arrivo {flight_data['route'][0]['cityTo']}\n"
+                        f"Data di partenza {flight_data['route'][0]['local_departure']}\n"
+                        "Ritorno:\n"
+                        f"Citta di partenza {flight_data['route'][1]['cityFrom']}\n"
+                        f"Aeroporto di partenza {flight_data['route'][1]['flyFrom']}\n"
+                        f"Aeroporto di arrivo {flight_data['route'][1]['flyTo']}\n"
+                        f"Citta di arrivo {flight_data['route'][1]['cityTo']}\n"
+                        f"Data di ritorno {flight_data['route'][1]['local_departure']}\n"
+                        f"Prezzo {flight_data['price']}\n")
 
         # Esegui il commit delle modifiche al database
 

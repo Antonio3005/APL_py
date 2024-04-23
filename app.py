@@ -9,7 +9,6 @@ app = Flask(__name__)
 
 def send_email():
     while(True):
-        logging.error("sono qui")
         notifier.send_notify()
         time.sleep(3600)
 
