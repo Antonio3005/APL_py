@@ -169,7 +169,7 @@ def formatta_date(d):
 
 def check_flights(flight_data):
     try:
-        if(flight_data['data']==[]):
+        if('data' in flight_data):
             body = (f"Per oggi niente offerte")
 
         else:
